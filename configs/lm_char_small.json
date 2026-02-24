@@ -19,5 +19,11 @@
     "max_steps": 1000,
     "log_every": 100,
     "lr": 0.001
+  },
+  "sampling": {
+    "max_new_tokens": 128,
+    "temperature": 1.0,
+    "top_k": 40,
+    "greedy": false
   }
 }
