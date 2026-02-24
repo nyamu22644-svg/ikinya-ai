@@ -1,0 +1,7 @@
+{
+  "run": { "name": "lm_char_medium_smoke", "seed": 1337 },
+  "data": { "path": "data/corpus.txt", "seq_len": 128, "batch_size": 8 },
+  "model": { "d_model": 128, "n_heads": 4, "n_layers": 4, "d_ff": 256, "dropout": 0.1 },
+  "trainer": { "max_steps": 200, "log_every": 50, "lr": 0.001, "grad_accum": 4 },
+  "sampling": { "prompt": "h", "max_new_tokens": 128, "temperature": 0.9, "top_k": 50, "greedy": false }
+}
