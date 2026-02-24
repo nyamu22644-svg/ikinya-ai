@@ -1,0 +1,10 @@
+{
+  "run": {
+    "name": "lm_char_small",
+    "seed": 1337
+  },
+  "trainer": {
+    "max_steps": 200,
+    "log_every": 20
+  }
+}
