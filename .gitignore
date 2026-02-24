@@ -5,11 +5,15 @@ __pycache__/
 # Virtual env
 venv/
 
-# Downloaded wheels
+# Wheels
 wheels/
+
+# Outputs / checkpoints
+outputs/
+checkpoints/
+*.pt
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
-.idea/
