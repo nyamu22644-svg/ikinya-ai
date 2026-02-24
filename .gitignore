@@ -17,3 +17,6 @@ checkpoints/
 .DS_Store
 Thumbs.db
 .vscode/
+
+data/
+!data/README.md
