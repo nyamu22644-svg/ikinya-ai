@@ -1,5 +1,5 @@
 import torch
-from core.transformer_block import TransformerBlock
+from ikinya.models.transformer_block import TransformerBlock
 
 torch.manual_seed(0)
 

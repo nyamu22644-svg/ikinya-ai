@@ -1,5 +1,5 @@
 import torch
-from core.model import MiniTransformerLM
+from ikinya.models.model import MiniTransformerLM
 
 torch.manual_seed(0)
 

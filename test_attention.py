@@ -1,5 +1,5 @@
 import torch
-from core.attention import scaled_dot_product_attention
+from ikinya.models.attention import scaled_dot_product_attention
 
 torch.manual_seed(0)
 

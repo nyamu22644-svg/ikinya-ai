@@ -1,5 +1,5 @@
 import torch
-from core.multihead import MultiHeadSelfAttention
+from ikinya.models.multihead import MultiHeadSelfAttention
 
 torch.manual_seed(0)
 
