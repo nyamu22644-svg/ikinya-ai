@@ -20,3 +20,10 @@ Thumbs.db
 
 data/
 !data/README.md
+
+# experiment artifacts (never commit)
+runs/
+data/*.txt
+data/corpus*.txt
+*.pt
+*.pth
