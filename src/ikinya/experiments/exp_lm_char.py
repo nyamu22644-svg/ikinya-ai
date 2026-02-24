@@ -6,6 +6,7 @@ from ikinya.core.checkpoint import save_checkpoint, load_checkpoint
 from ikinya.core.logging import RunLogger
 from ikinya.experiments.registry import register
 from ikinya.models.model import MiniTransformerLM
+from ikinya.train.generation import generate_text, SamplingConfig
 
 
 def build_vocab(text: str):
@@ -17,26 +18,6 @@ def build_vocab(text: str):
 
 def encode(text: str, stoi: dict) -> torch.Tensor:
     return torch.tensor([stoi[ch] for ch in text], dtype=torch.long)
-
-
-@torch.no_grad()
-def generate(model: MiniTransformerLM, prompt: str, stoi: dict, itos: dict, max_new_tokens: int = 200) -> str:
-    model.eval()
-    device = next(model.parameters()).device
-    max_len = model.max_len  # from your MiniTransformerLM
-
-    # start with prompt
-    idx = torch.tensor([stoi[ch] for ch in prompt], dtype=torch.long, device=device)
-
-    for _ in range(max_new_tokens):
-        # crop context to model max_len
-        idx_cond = idx[-max_len:]
-
-        logits = model(idx_cond)  # (T, V)
-        next_id = torch.argmax(logits[-1], dim=-1).view(1)
-        idx = torch.cat([idx, next_id], dim=0)
-
-    return "".join(itos[int(i)] for i in idx.tolist())
 
 
 @register("lm_char")
@@ -83,36 +64,37 @@ def run_lm_char(cfg: dict, run_dir: str, logger: RunLogger):
     max_steps = int(cfg["trainer"]["max_steps"])
     log_every = int(cfg["trainer"]["log_every"])
 
+    # ---- sampling config (from cfg) ----
+    scfg = cfg.get("sampling", {})
+    sampling = SamplingConfig(
+        max_new_tokens=int(scfg.get("max_new_tokens", T)),
+        temperature=float(scfg.get("temperature", 1.0)),
+        top_k=int(scfg.get("top_k", 40)),
+        greedy=bool(scfg.get("greedy", False)),
+    )
+
     # ---- training loop ----
     model.train()
     n = data.numel()
 
     for step in range(start_step, max_steps + 1):
-        # sample random batch
         ix = torch.randint(0, n - T - 1, (B,), device=device)
-        x = torch.stack([data[i : i + T] for i in ix]).to(device)       # (B, T)
-        y = torch.stack([data[i + 1 : i + 1 + T] for i in ix]).to(device)  # (B, T)
+        x = torch.stack([data[i : i + T] for i in ix]).to(device)           # (B, T)
+        y = torch.stack([data[i + 1 : i + 1 + T] for i in ix]).to(device)   # (B, T)
 
-                # model expects (T,) not (B,T) -> run per sequence, then stack
-        logits_list = []
-        for b in range(B):
-            logits_b = model(x[b])          # (T, V)
-            logits_list.append(logits_b)
-        logits = torch.stack(logits_list, dim=0)  # (B, T, V)
-
+        logits = model(x)  # (B, T, V)
         loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
 
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
 
-        # log + sample + checkpoint
         if step % log_every == 0 or step == start_step or step == max_steps:
             logger.log_metrics(step, {"loss": float(loss.item())})
 
             prompt = "h" if "h" in stoi else chars[0]
-            sample = generate(model, prompt=prompt, stoi=stoi, itos=itos, max_new_tokens=200)
-            logger.log_event(step, "sample", {"prompt": prompt, "text": sample})
+            sample = generate_text(model, prompt=prompt, stoi=stoi, itos=itos, sampling=sampling)
+            logger.log_event(step, "sample", {"prompt": prompt, "text": sample, "sampling": sampling.__dict__})
 
             save_checkpoint(ckpt_path, step=step, model=model, optimizer=opt, config=cfg)
 

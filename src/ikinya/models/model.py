@@ -1,3 +1,4 @@
+
 import torch
 from .transformer_block import TransformerBlock
 
@@ -18,23 +19,36 @@ class MiniTransformerLM(torch.nn.Module):
         ])
 
         self.ln_f = torch.nn.LayerNorm(d_model)
-        self.head = torch.nn.Linear(d_model, vocab_size, bias=False)  # output projection
+        self.head = torch.nn.Linear(d_model, vocab_size, bias=False)
 
     def forward(self, tokens: torch.Tensor):
         """
-        tokens: (T,) int64
-        returns logits: (T, vocab_size)
+        tokens:
+          - (T,) int64 -> returns (T, vocab_size)
+          - (B, T) int64 -> returns (B, T, vocab_size)
         """
-        T = tokens.size(0)
+        if tokens.dim() == 1:
+            tokens = tokens.unsqueeze(0)
+            squeeze_back = True
+        elif tokens.dim() == 2:
+            squeeze_back = False
+        else:
+            raise ValueError(f"Expected tokens dim 1 or 2, got {tokens.dim()}")
+
+        B, T = tokens.shape
         assert T <= self.max_len, "Sequence too long for this model"
 
-        positions = torch.arange(T, device=tokens.device)
+        positions = torch.arange(T, device=tokens.device).unsqueeze(0).expand(B, T)
 
-        x = self.token_emb(tokens) + self.pos_emb(positions)
+        x = self.token_emb(tokens) + self.pos_emb(positions)  # (B, T, d_model)
 
         for block in self.blocks:
-            x = block(x, causal=True)
+            x = block(x, causal=True)  # TransformerBlock already works with (B,T,d) via attention
 
         x = self.ln_f(x)
-        logits = self.head(x)
+        logits = self.head(x)  # (B, T, vocab_size)
+
+        if squeeze_back:
+            logits = logits.squeeze(0)  # (T, vocab_size)
+
         return logits

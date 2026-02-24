@@ -5,20 +5,23 @@ import math
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
     """
-    Q, K, V: (T, d_model)
-    mask: (T, T) lower triangular mask for causal attention
+    Supports:
+      - unbatched: Q,K,V (T, d)
+      - batched:   Q,K,V (..., T, d)  e.g. (B, H, T, d)
+
+    mask:
+      - (T, T) or broadcastable to (..., T, T)
+      - mask should be 1 for allowed, 0 for blocked
     """
+    d = Q.size(-1)
 
-    d_model = Q.size(-1)
-
-    # Scaled dot product
-    scores = (Q @ K.T) / math.sqrt(d_model)
+    # (..., T, T)
+    scores = (Q @ K.transpose(-2, -1)) / math.sqrt(d)
 
     if mask is not None:
-        scores = scores.masked_fill(mask == 0, float('-inf'))
+        # broadcast mask to scores shape
+        scores = scores.masked_fill(mask == 0, float("-inf"))
 
-    weights = F.softmax(scores, dim=-1)
-
-    output = weights @ V
-
+    weights = F.softmax(scores, dim=-1)  # (..., T, T)
+    output = weights @ V                # (..., T, d)
     return output, weights
