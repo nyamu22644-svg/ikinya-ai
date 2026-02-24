@@ -9,6 +9,7 @@ from ikinya.experiments.registry import get_experiment
 
 # IMPORTANT: import experiments so they register
 import ikinya.experiments.exp_smoke  # noqa
+import ikinya.experiments.exp_lm_char  # noqa
 
 
 def main():
