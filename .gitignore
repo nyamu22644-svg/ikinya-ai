@@ -1,29 +1,32 @@
-# Python
+# ---- Python ----
 __pycache__/
 *.pyc
-
-# Virtual env
+.venv/
 venv/
 
-# Wheels
+# ---- Virtual env ----
+venv/
+
+# ---- Wheels ----
 wheels/
 
-# Outputs / checkpoints
-outputs/
-checkpoints/
-*.pt
-
-# OS / editor
+# ---- OS / editor ----
 .DS_Store
 Thumbs.db
 .vscode/
 
-data/
+# ---- corpora (root data folder only) ----
+/data/
+/data/*.txt
+/data/*.json
+/data/*.csv
 !data/README.md
 
-# experiment artifacts (never commit)
-runs/
-data/*.txt
-data/corpus*.txt
+# ---- experiment artifacts ----
+/runs/
+outputs/
+checkpoints/
+
+# ---- checkpoints ----
 *.pt
 *.pth

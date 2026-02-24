@@ -1,29 +1,31 @@
 {
   "run": {
-    "name": "lm_char_small",
+    "name": "lm_char_medium",
     "seed": 1337
   },
   "data": {
     "path": "data/corpus.txt",
-    "seq_len": 128,
-    "batch_size": 32
+    "seq_len": 256,
+    "batch_size": 8
   },
   "model": {
-    "d_model": 64,
+    "d_model": 128,
     "n_heads": 4,
-    "n_layers": 2,
-    "d_ff": 128,
+    "n_layers": 4,
+    "d_ff": 256,
     "dropout": 0.1
   },
   "trainer": {
-    "max_steps": 1000,
-    "log_every": 100,
-    "lr": 0.001
+    "max_steps": 8000,
+    "log_every": 200,
+    "lr": 0.001,
+    "grad_accum": 4
   },
   "sampling": {
     "max_new_tokens": 128,
-    "temperature": 1.0,
-    "top_k": 40,
-    "greedy": false
+    "temperature": 0.9,
+    "top_k": 50,
+    "greedy": false,
+    "prompt": "h"
   }
 }
